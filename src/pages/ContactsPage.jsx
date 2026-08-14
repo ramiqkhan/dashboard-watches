@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = 'https://backen-watches.vercel.app';
 
 import React, { useEffect, useState } from 'react';
 
@@ -9,7 +9,7 @@ export default function ContactsPage() {
   // Fetch all contact messages
   const fetchContacts = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/contacts`); // Updated to use API_BASE_URL
+      const res = await fetch(`${API_BASE_URL}/api/contacts`); 
       const data = await res.json();
       
       // Check both standard formats (data.data or direct array)
@@ -29,7 +29,7 @@ export default function ContactsPage() {
     fetchContacts();
   }, []);
 
-  // Handle Delete Message (Updated to use API_BASE_URL)
+  // Handle Delete Message
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this message?')) return;
 
@@ -49,7 +49,7 @@ export default function ContactsPage() {
     }
   };
 
-  // Handle Status Toggle (Updated to use API_BASE_URL)
+  // Handle Status Toggle
   const handleStatusChange = async (id, newStatus) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/contacts/${id}/status`, {
@@ -108,6 +108,7 @@ export default function ContactsPage() {
                       onChange={(e) => handleStatusChange(c._id, e.target.value)}
                       className="text-xs border border-slate-300 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
+                      <option value="Pending">Pending</option>
                       <option value="Read">Read</option>
                       <option value="Resolved">Resolved</option>
                     </select>

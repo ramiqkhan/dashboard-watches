@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 // Set up your base URL here or use an environment variable
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = 'https://backen-watches.vercel.app';
 
 const BRANDS = [
   'Just Cavalli', 'Tory Burch', 'Tag Heuer', 'Versace', 'Movado', 
