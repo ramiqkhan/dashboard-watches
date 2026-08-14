@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Plus, Edit, Trash2, X } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Image as ImageIcon } from 'lucide-react';
 
 function WatchStrapAdmin() {
   const [straps, setStraps] = useState([]);
@@ -17,16 +16,38 @@ function WatchStrapAdmin() {
     strapType: 'Leather Strap',
     stock: 10
   });
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState([]); // New files selected
+  const [imagePreviews, setImagePreviews] = useState([]); // Object URLs for local previews
+  const [existingImages, setExistingImages] = useState([]); // Cloudinary images for edits
 
   const stylesList = ['Leather Strap', 'Stainless Steel', 'Mesh Strap', 'Rubber Strap'];
 
-  // Fetch all straps
+  // Safe API URL resolution for Vite / CRA
+  const getApiUrl = () => {
+    try {
+      if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL;
+      }
+    } catch (e) {}
+    
+    try {
+      if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) {
+        return process.env.REACT_APP_API_URL;
+      }
+    } catch (e) {}
+
+    return 'http://localhost:5000';
+  };
+
+  // Fetch all straps using fetch
   const fetchStraps = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/watch-straps');
-      if (res.data.success) {
-        setStraps(res.data.data);
+      const API_URL = getApiUrl();
+      const response = await fetch(`${API_URL}/api/watch-straps`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setStraps(data.data);
       }
     } catch (err) {
       console.error('Error fetching straps:', err);
@@ -44,11 +65,26 @@ function WatchStrapAdmin() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Handle file selection, revoke old memory URLs, and generate local preview URLs
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setImages(files);
+
+    // Revoke previous URLs to avoid memory leaks
+    imagePreviews.forEach(url => URL.revokeObjectURL(url));
+
+    // Create preview URLs
+    const previews = files.map(file => URL.createObjectURL(file));
+    setImagePreviews(previews);
+  };
+
   // Open Modal for Add
   const handleOpenAdd = () => {
     setIsEditing(false);
     setFormData({ name: '', description: '', price: '', strapType: 'Leather Strap', stock: 10 });
     setImages([]);
+    setImagePreviews([]);
+    setExistingImages([]);
     setIsModalOpen(true);
   };
 
@@ -63,10 +99,13 @@ function WatchStrapAdmin() {
       strapType: strap.strapType,
       stock: strap.stock || 10
     });
+    setImages([]);
+    setImagePreviews([]);
+    setExistingImages(strap.images || []); // Load current Cloudinary images
     setIsModalOpen(true);
   };
 
-  // Submit Form (Create or Update)
+  // Submit Form (Create or Update) using fetch
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData();
@@ -81,28 +120,43 @@ function WatchStrapAdmin() {
     }
 
     try {
-      if (isEditing) {
-        await axios.put(`http://localhost:5000/api/watch-straps/${currentId}`, data, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+      const API_URL = getApiUrl();
+      const url = isEditing 
+        ? `${API_URL}/api/watch-straps/${currentId}` 
+        : `${API_URL}/api/watch-straps`;
+      
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        body: data,
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        setIsModalOpen(false);
+        fetchStraps();
       } else {
-        await axios.post('http://localhost:5000/api/watch-straps', data, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        console.error('Server error:', result);
       }
-      setIsModalOpen(false);
-      fetchStraps();
     } catch (err) {
       console.error('Error saving watch strap:', err);
     }
   };
 
-  // Delete Strap
+  // Delete Strap using fetch
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this watch strap?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/watch-straps/${id}`);
-        fetchStraps();
+        const API_URL = getApiUrl();
+        const response = await fetch(`${API_URL}/api/watch-straps/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          fetchStraps();
+        }
       } catch (err) {
         console.error('Error deleting strap:', err);
       }
@@ -132,6 +186,7 @@ function WatchStrapAdmin() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th className="p-4">Image</th>
                 <th className="p-4">Name</th>
                 <th className="p-4">Category</th>
                 <th className="p-4">Price</th>
@@ -142,6 +197,19 @@ function WatchStrapAdmin() {
             <tbody className="divide-y divide-slate-200 text-sm">
               {straps.map((strap) => (
                 <tr key={strap._id} className="hover:bg-slate-50">
+                  <td className="p-4">
+                    {strap.images && strap.images.length > 0 ? (
+                      <img 
+                        src={strap.images[0].url} 
+                        alt={strap.name} 
+                        className="w-10 h-10 object-cover rounded-md border border-slate-200"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-slate-100 rounded-md flex items-center justify-center text-slate-400">
+                        <ImageIcon size={18} />
+                      </div>
+                    )}
+                  </td>
                   <td className="p-4 font-medium text-slate-800">{strap.name}</td>
                   <td className="p-4 text-slate-600">{strap.strapType}</td>
                   <td className="p-4 font-semibold text-slate-900">${strap.price.toFixed(2)}</td>
@@ -163,8 +231,8 @@ function WatchStrapAdmin() {
 
       {/* Modal for Add / Edit */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 relative">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-lg w-full p-6 relative my-8">
             <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
               <X size={20} />
             </button>
@@ -202,8 +270,42 @@ function WatchStrapAdmin() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Images</label>
-                <input type="file" multiple onChange={(e) => setImages(e.target.files)} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800" />
+                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Images (Up to 5)</label>
+                <input 
+                  type="file" 
+                  multiple 
+                  accept="image/*"
+                  onChange={handleImageChange} 
+                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800" 
+                />
+
+                {/* Existing Images Previews (When Editing) */}
+                {isEditing && existingImages.length > 0 && imagePreviews.length === 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-slate-400 mb-2 font-medium">Current Images:</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {existingImages.map((img, idx) => (
+                        <div key={idx} className="relative w-16 h-16 border border-slate-200 rounded-md overflow-hidden bg-slate-50">
+                          <img src={img.url} alt="Uploaded preview" className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* New Local Image Previews */}
+                {imagePreviews.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-slate-400 mb-2 font-medium">New Image Selection Previews:</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {imagePreviews.map((src, idx) => (
+                        <div key={idx} className="relative w-16 h-16 border border-slate-200 rounded-md overflow-hidden bg-slate-50">
+                          <img src={src} alt="New upload preview" className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
