@@ -22,7 +22,7 @@ function WatchStrapAdmin() {
 
   const stylesList = ['Leather Strap', 'Stainless Steel', 'Mesh Strap', 'Rubber Strap'];
 
-  // Safe API URL resolution for Vite / CRA
+  // Safe API URL resolution with deployed backend fallback
   const getApiUrl = () => {
     try {
       if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) {
@@ -36,7 +36,7 @@ function WatchStrapAdmin() {
       }
     } catch (e) {}
 
-    return 'http://localhost:5000';
+    return 'https://backen-watches.vercel.app';
   };
 
   // Fetch all straps using fetch

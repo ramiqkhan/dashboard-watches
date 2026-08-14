@@ -1,3 +1,5 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -70,7 +72,7 @@ export default function AddWatchPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/watches', {
+      const response = await fetch(`${API_BASE_URL}/api/watches`, {
         method: 'POST',
         body: data,
       });

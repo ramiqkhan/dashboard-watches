@@ -1,3 +1,5 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 import React, { useEffect, useState } from 'react';
 import { ShoppingBag, Watch, Mail, Tag, TrendingUp, DollarSign } from 'lucide-react';
 
@@ -15,9 +17,9 @@ function DashboardHome() {
     const fetchDashboardData = async () => {
       try {
         const [ordersRes, watchesRes, contactsRes] = await Promise.all([
-          fetch('http://localhost:5000/api/orders'),
-          fetch('http://localhost:5000/api/watches'),
-          fetch('http://localhost:5000/api/contact')
+          fetch(`${API_BASE_URL}/api/orders`),
+          fetch(`${API_BASE_URL}/api/watches`),
+          fetch(`${API_BASE_URL}/api/contacts`)
         ]);
 
         const ordersData = await ordersRes.json();

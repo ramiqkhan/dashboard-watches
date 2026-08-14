@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { FaTrash, FaSpinner } from 'react-icons/fa';
 
+// Base URL for your deployed backend API
+const API_BASE_URL = 'https://backen-watches.vercel.app';
+
 // Reliable SVG data URI fallback for missing product images
 const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%2394a3b8'%3ENo Img%3C/text%3E%3C/svg%3E";
 
@@ -12,7 +15,7 @@ export default function OrdersPage() {
   // Fetch all orders
   const fetchOrders = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/orders');
+      const res = await fetch(`${API_BASE_URL}/api/orders`);
       const data = await res.json();
       if (data.success) {
         setOrders(data.data);
@@ -31,7 +34,7 @@ export default function OrdersPage() {
   // Handle Order Status Update
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
@@ -54,7 +57,7 @@ export default function OrdersPage() {
 
     setDeletingId(orderId);
     try {
-      const response = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
         method: 'DELETE',
       });
       const data = await response.json();

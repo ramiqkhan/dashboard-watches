@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 
+// Set up your base URL here or use an environment variable
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const BRANDS = [
   'Just Cavalli', 'Tory Burch', 'Tag Heuer', 'Versace', 'Movado', 
   'Tissot', 'Salvatore Ferragamo', 'Gucci', 'Maurice Lacroix', 'Burberry', 
@@ -35,7 +38,7 @@ export default function WatchesPage() {
   // Fetch all watches
   const fetchWatches = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/watches');
+      const res = await fetch(`${API_URL}/api/watches`);
       const data = await res.json();
       if (data.success) setWatches(data.data);
     } catch (err) {
@@ -51,7 +54,7 @@ export default function WatchesPage() {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this watch?')) {
       try {
-        const response = await fetch(`http://localhost:5000/api/watches/${id}`, {
+        const response = await fetch(`${API_URL}/api/watches/${id}`, {
           method: 'DELETE',
         });
         const data = await response.json();
@@ -125,7 +128,7 @@ export default function WatchesPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/watches/${editingWatch._id}`, {
+      const response = await fetch(`${API_URL}/api/watches/${editingWatch._id}`, {
         method: 'PUT',
         body: data,
       });

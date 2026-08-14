@@ -1,3 +1,5 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 import React, { useEffect, useState } from 'react';
 
 const BRANDS = [
@@ -30,8 +32,8 @@ export default function SalesPage() {
   const fetchData = async () => {
     try {
       const [salesRes, watchesRes] = await Promise.all([
-        fetch('http://localhost:5000/api/sales'),
-        fetch('http://localhost:5000/api/watches')
+        fetch(`${API_BASE_URL}/api/sales`),
+        fetch(`${API_BASE_URL}/api/watches`)
       ]);
       const salesData = await salesRes.json();
       const watchesData = await watchesRes.json();
@@ -98,8 +100,8 @@ export default function SalesPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = editingSaleId 
-      ? `http://localhost:5000/api/sales/${editingSaleId}` 
-      : 'http://localhost:5000/api/sales';
+      ? `${API_BASE_URL}/api/sales/${editingSaleId}` 
+      : `${API_BASE_URL}/api/sales`;
     const method = editingSaleId ? 'PUT' : 'POST';
 
     try {
@@ -127,7 +129,7 @@ export default function SalesPage() {
     if (!window.confirm('Are you sure you want to delete this sale campaign?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/sales/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/sales/${id}`, {
         method: 'DELETE',
       });
       const data = await response.json();

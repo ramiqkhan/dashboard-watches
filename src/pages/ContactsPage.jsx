@@ -1,3 +1,5 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 import React, { useEffect, useState } from 'react';
 
 export default function ContactsPage() {
@@ -5,33 +7,34 @@ export default function ContactsPage() {
   const [loading, setLoading] = useState(true);
 
   // Fetch all contact messages
-const fetchContacts = async () => {
-  try {
-    const res = await fetch('http://localhost:5000/api/contacts'); // Updated to plural
-    const data = await res.json();
-    
-    // Check both standard formats (data.data or direct array)
-    if (data.success) {
-      setContacts(data.data || data.contacts || data);
-    } else if (Array.isArray(data)) {
-      setContacts(data);
+  const fetchContacts = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/contacts`); // Updated to use API_BASE_URL
+      const data = await res.json();
+      
+      // Check both standard formats (data.data or direct array)
+      if (data.success) {
+        setContacts(data.data || data.contacts || data);
+      } else if (Array.isArray(data)) {
+        setContacts(data);
+      }
+    } catch (err) {
+      console.error('Error fetching contacts:', err);
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error('Error fetching contacts:', err);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+  
   useEffect(() => {
     fetchContacts();
   }, []);
 
-  // Handle Delete Message (Updated to use /api/contacts/:id)
+  // Handle Delete Message (Updated to use API_BASE_URL)
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this message?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/contacts/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/contacts/${id}`, {
         method: 'DELETE',
       });
       const data = await response.json();
@@ -46,10 +49,10 @@ const fetchContacts = async () => {
     }
   };
 
-  // Handle Status Toggle (Updated to use /api/contacts/:id/status)
+  // Handle Status Toggle (Updated to use API_BASE_URL)
   const handleStatusChange = async (id, newStatus) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/contacts/${id}/status`, {
+      const response = await fetch(`${API_BASE_URL}/api/contacts/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
@@ -105,7 +108,6 @@ const fetchContacts = async () => {
                       onChange={(e) => handleStatusChange(c._id, e.target.value)}
                       className="text-xs border border-slate-300 rounded-md px-2 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
-                      <option value="Pending">Pending</option>
                       <option value="Read">Read</option>
                       <option value="Resolved">Resolved</option>
                     </select>
